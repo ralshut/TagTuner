@@ -61,8 +61,8 @@ I suggest a cool-white (signal white) base and a dark front plate with a nice ca
 ### BOM for XIAO-Custom version
 - [XIAO esp32-c6](https://s.click.aliexpress.com/e/_c3hnW7jV) controller with built-in antenna
 - [pn532](https://s.click.aliexpress.com/e/_c3l9MKHr) NFC reader
-- [grove angle connectors](https://s.click.aliexpress.com/e/_c3xcepEd)
-- [grove cables](https://s.click.aliexpress.com/e/_c3rtIVGR)
+- [grove angle connectors](https://s.click.aliexpress.com/e/_c2RsQTy5) any HY2.0-4P will do
+- [grove cables](https://s.click.aliexpress.com/e/_c4UAtrRb)
 - [hw040](https://s.click.aliexpress.com/e/_c3vSH4wJ) rotary encoder
 - [dupont cables](https://s.click.aliexpress.com/e/_c4FUMZi7) for hw040
 - [M2.5 10mm](https://s.click.aliexpress.com/e/_c3gFU5Zv) screws
@@ -114,7 +114,7 @@ Use 10mm M2.5 screws (nfc board, volume encoder, front plate).
 - [HA Voice PE version](https://github.com/luka6000/TagTuner/blob/main/TagTuner-on-HA-Voice-PE.md): TagTuner on HA Voice PE device
 - [tagtuner-for-tagreader.yaml](https://github.com/luka6000/TagTuner/blob/main/tagtuner-for-tagreader.yaml): TagTuner firmware for [Adonno tagreader](https://github.com/adonno/tagreader) device (buzzer only, no led support)
 - [Atom version](https://github.com/luka6000/TagTuner/blob/main/TagTuner-Atom.md): based on m5stack Atom Echo and grove connectors; free model case but much thicker (23.5mm)
-- [Compact Case](https://www.printables.com/model/1165511-tagtuner-compact-case-rfid-nfc-scanner-home-assist): card-sized case by Youddha (thank you!)
+- [Compact Case](https://makerworld.com/pl/models/1455126-tagtuner-compact-multi-use-case-rfid-nfc-scanner-ha): card-sized case by Youddha (thank you!)
 
 ## Using TagTuner
 TagTuner relies heavily on Home Assistant automation. To get it working, import **TagTuner for HAss** blueprint
