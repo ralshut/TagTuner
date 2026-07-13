@@ -33,10 +33,12 @@ Geometrie-Fakten der Platte (per Ray-Casting ermittelt, da kein OpenSCAD-Quellfi
 - Rundes Loch des Dreh-Encoders/Buttons: Zentrum (42.44, -42.43), Radius ~3.92mm, linke Kante
   bei x=38.3. Rundherum ebenfalls eine kleine Fase (Wandstärke fällt dort von 4mm auf ~2mm,
   ca. 2mm rund um die Lochkante), sonst 4mm Wandstärke, Top-Z=27.0, Boden-Z=23.0.
-- Aktuelle Gravur: Text endet bündig an der linken Lochkante (x=38.1, 0,2mm Luft), vertikal
-  zentriert auf die Loch-Mitte (y=-42.43), 6mm Kappenhöhe (DejaVu Sans Bold), rechtsbündig
-  ausgerichtet (Name wächst nach links). Gravurtiefe 0,6mm → Wandstärke bleibt ≥3,4mm, nur direkt
-  an der Lochfase sinkt sie auf minimal 1,4mm (unbedenklich für FDM-Druck).
+- Aktuelle Gravur: Text endet rechts bei x=34.3 (4mm sichtbarer Abstand zur Lochkante bei x=38.3;
+  eine erste Version mit nur 0,2mm Abstand "klebte" optisch am Loch und wurde deshalb korrigiert),
+  vertikal zentriert auf die Loch-Mitte (y=-42.43), 6mm Kappenhöhe (DejaVu Sans Bold), rechtsbündig
+  ausgerichtet (Name wächst nach links, `TEXT_RIGHT_X` in `_engrave_names.py`). Gravurtiefe 0,6mm →
+  Wandstärke bleibt ≥3,4mm, nur direkt an der Lochfase sinkt sie auf minimal 1,4mm (unbedenklich
+  für FDM-Druck).
 - Geänderter Textinhalt: "Levins TagTuner" / "Joris TagTuner" / "Tilians TagTuner" (Dateisuffix
   bleibt Levin/Joris/Tilian, siehe `names`-Dict in `_engrave_names.py`).
 - Boolean-Differenz via `trimesh.boolean.difference(..., engine="manifold")`.

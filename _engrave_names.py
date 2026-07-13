@@ -16,7 +16,7 @@ SRC = r"3d models/TagTunerAtomEchoGrovePlate.stl"
 TOP_Z = 27.0
 ENGRAVE_DEPTH = 0.6          # mm, well within the 4mm local wall thickness
 CAP_HEIGHT = 6.0             # mm, target capital-letter height
-TEXT_RIGHT_X = 38.1          # mm, flush with the encoder hole's left edge (38.3), tiny 0.2mm clearance
+TEXT_RIGHT_X = 34.3          # mm, encoder hole's left edge (38.3) minus a 4mm visible gap
 TEXT_CENTER_Y = -42.43       # mm, same y-coordinate as the encoder hole's center
 GAP_ABOVE_STAMP = 0.6        # mm the stamp pokes above the top surface, for a clean boolean cut
 
