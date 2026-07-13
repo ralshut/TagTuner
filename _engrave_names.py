@@ -68,9 +68,9 @@ def main():
 
     # file-suffix name -> full engraved text
     names = {
-        "Levin": "Levins TagTuner",
-        "Joris": "Joris TagTuner",
-        "Tilian": "Tilians TagTuner",
+        "Levin": "Levin's TagTuner",
+        "Jori": "Jori's TagTuner",
+        "Tilian": "Tilian's TagTuner",
     }
 
     for suffix, text in names.items():

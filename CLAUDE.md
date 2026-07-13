@@ -18,7 +18,7 @@ Blueprints unter `blueprints/`.
 namensgravierte Varianten erzeugt:
 
 - `3d models/TagTunerAtomEchoGrovePlate_Levin.stl`
-- `3d models/TagTunerAtomEchoGrovePlate_Joris.stl`
+- `3d models/TagTunerAtomEchoGrovePlate_Jori.stl` (Kind heißt Jori, nicht Joris — Dateiname korrigiert)
 - `3d models/TagTunerAtomEchoGrovePlate_Tilian.stl`
 
 Erzeugt mit [`_engrave_names.py`](._engrave_names.py) (Python, benötigt `trimesh`, `manifold3d`,
@@ -39,8 +39,9 @@ Geometrie-Fakten der Platte (per Ray-Casting ermittelt, da kein OpenSCAD-Quellfi
   ausgerichtet (Name wächst nach links, `TEXT_RIGHT_X` in `_engrave_names.py`). Gravurtiefe 0,6mm →
   Wandstärke bleibt ≥3,4mm, nur direkt an der Lochfase sinkt sie auf minimal 1,4mm (unbedenklich
   für FDM-Druck).
-- Geänderter Textinhalt: "Levins TagTuner" / "Joris TagTuner" / "Tilians TagTuner" (Dateisuffix
-  bleibt Levin/Joris/Tilian, siehe `names`-Dict in `_engrave_names.py`).
+- Textinhalt (mit Possessiv-Apostroph): "Levin's TagTuner" / "Jori's TagTuner" / "Tilian's TagTuner"
+  (Dateisuffix Levin/Jori/Tilian, siehe `names`-Dict in `_engrave_names.py`). Vorherige Version ohne
+  Apostroph ("Levins"/"Joris"/"Tilians") wurde ersetzt.
 - Boolean-Differenz via `trimesh.boolean.difference(..., engine="manifold")`.
 - Frühere Version (verworfen): Text zentriert unter dem Schlitz bei y≈-18 — wurde ersetzt, weil
   der Nutzer die Position an den Encoder/Button statt an den Schlitz gebunden haben wollte.
