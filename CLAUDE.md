@@ -74,20 +74,29 @@ Ergebnissen führte):
 - Kleiner flacher Schacht (Boden z=0,4mm) bei x≈49-62, y≈47-58, direkt vor dem USB-C-Durchbruch
   im Gehäuse — nur die Buchse des XIAO reicht dort hinein, der Rest der Platine liegt auf A/B/D.
 
-Adapter-Konstruktion (`_engrave_names.py`-Stil, ad-hoc-Skript nicht im Repo committet):
-Robuster Ansatz statt einzelner Füße: ein Volumenblock über der gesamten Zielfläche von z=0,3 bis
-z=11,0 wird per `trimesh.boolean.difference` mit der vorhandenen Base verrechnet — das Ergebnis
-füllt automatisch genau die Lücke zum vorhandenen Terrain, unabhängig von dessen tatsächlicher
-Form (deutlich zuverlässiger als manuell platzierte Füße, die zweimal mit vorhandener Geometrie
-kollidierten, bis dieser Ansatz verwendet wurde). 4 kleine Klemmnasen (2,2×2,2mm, 1,6mm hoch)
-sitzen außerhalb der XIAO-Kontur (x=32-53, y=39-56,5) an deren 4 Ecken.
+Adapter-Konstruktion (aktuelle v3, ad-hoc-Skript nicht im Repo committet):
+**4 einzelne Stützbeine** (Zylinder, r=1-1.6mm) stehen exakt auf den 4 vorhandenen z=5,70mm-Flächen
+(A, B, D **und zusätzlich der Schraubdom-Kappe**, versetzt vom Domzentrum bei (44.4, 48.93) um die
+zentrale Pilotbohrung zu meiden) und reichen hoch bis z=11,0. Eine **dünne, frei schwebende
+Deckplatte** (1,4mm dick, z=9,6-11,0, Fläche x=[27,57] y=[34,60]) verbindet die 4 Beinspitzen —
+dazwischen ist bewusst **keine** Fläche/Material (kein Vollblock mehr, siehe unten). Beine und Deck
+werden je per `trimesh.boolean.difference(fill_block, base)` erzeugt ("Volumenblock minus
+vorhandene Geometrie" — füllt automatisch nur die Lücke zum Terrain, unabhängig von dessen Form)
+und dann per `union` verbunden. 4 Klemmnasen (2,6×2,6mm, meist; die Ecke nahe der Gehäusewand ist
+kleiner: 1,8×1,8mm) sitzen außerhalb der XIAO-Kontur (x=32-53, y=39-56,5) an deren 4 Ecken, mit
+Sicherheitsabstand zur Wand geprüft.
 
-**Wichtige Lektion aus zwei Bugs in v1:** (1) eine "Donut-Loch" in der Deckfläche entstand, weil
-der Fußabdruck unnötig um den Schraubdom herumgeführt wurde (der Dom ist mit 5,7mm weit niedriger
-als die Deckplatte bei 9,6-11mm, keine Kollisionsgefahr); (2) die 4 Klemmnasen waren zentriert auf
-den XIAO-Eckpunkten statt außerhalb davon platziert. Beide Fehler wurden per direkter
-Mesh-Kollisionsprüfung (`trimesh.boolean.intersection` mit der Base, Volumen muss ~0 sein) und
-Ray-Cast-Verifikation der Standfläche gefunden und behoben.
+**Wichtige Lektionen aus den Entwicklungs-Iterationen** (jeweils per direkter Mesh-Kollisionsprüfung
+`trimesh.boolean.intersection` mit der Base gefunden, Volumen muss ~0 sein):
+1. v1: Fußabdruck wich unnötig dem Schraubdom aus → Donut-Loch mitten in der XIAO-Auflagefläche
+   (der Dom ist mit 5,7mm weit niedriger als das Deck bei 9,6-11mm, keine Kollisionsgefahr).
+2. v2: Klemmnasen waren zentriert auf den XIAO-Eckpunkten statt außerhalb davon.
+3. v2→v3: Nutzer wollte statt eines flächendeckenden Vollblocks (unnötig viel Material, "wirkt wie
+   ein Zylinder am Dom") eine Konstruktion mit nur 4 diskreten Auflagepunkten (A/B/D/Dom) und einer
+   dazwischen frei schwebenden Deckplatte — umgesetzt wie oben beschrieben. Dabei fielen erneut
+   Detailfehler auf: 3 der 4 Klemmnasen ragten ohne Deck-Material darunter über den Rand hinaus
+   ("hängen in der Luft"), weil die Deckfläche zu knapp bemessen war; behoben durch Vergrößerung
+   der Deckfläche und Anpassung einer Nasen-Position/-Größe nahe der Gehäusewand.
 
 Offen/nicht verifiziert: Nur 4 Eck-Klemmnasen statt (wie im offiziellen XIAO-Custom-Design, siehe
 README-Bild "XIAO will fit perfectly into the bottom part braces") vieler kleiner Noppen entlang
