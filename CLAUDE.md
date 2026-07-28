@@ -53,6 +53,47 @@ degenerate Faces, Euler-Zahl unverändert ggü. Original, Bounding-Box unveränd
 Wandstärke im Gravurbereich per Ray-Cast-Scan verifiziert (siehe Konversationshistorie für Details).
 Alle drei Varianten haben diese Checks bestanden.
 
+## XIAO-auf-Atom-Echo-Adapter
+
+`3d models/TagTunerAtomEchoGroveBase.stl` (die Basis, nicht die Plate) hat eine Aufnahme für das
+**M5Stack Atom-Echo-Modul** (24×24mm), die für den kleineren **Seeed XIAO ESP32-C6** (21×17,5mm)
+zu groß ist — es entsteht sichtbarer Leerraum um die Platine. `3d models/TagTunerXiaoEchoAdapter.stl`
+gleicht das aus.
+
+Geometrie-Fakten der Base (per Mesh-Analyse ermittelt, nicht per Bild/Ray-Cast-Schätzung — direkt
+über Face-Normalen/-Höhen aus dem Mesh gelesen, da Bild-basierte Schätzung mehrfach zu falschen
+Ergebnissen führte):
+
+- 3 alte Atom-Echo-Halteplattformen ("A", "B", "D") haben je **zwei** flache Ebenen:
+  - untere Ebene bei **z=5,70mm** (vermutlich die alte Klemm-/Schnapp-Ebene für das Echo-Modul)
+  - obere Ebene bei **z=11,00mm** — das ist die Ebene, auf der der XIAO tatsächlich aufliegen muss
+    (vom Nutzer per Handauflegen mit Kabeltest bestätigt: bei z=11 passt das USB-C-Kabel exakt).
+  - Plattform-Zentren (obere Ebene, Flächen-Schwerpunkt): A≈(32,39), B≈(52,39), D≈(32,58,5).
+- Zentraler Schraubdom bei (42,43, 48,93): konische Seiten, flache Kappe bei z=5,70, kein
+  Durchgangsloch gefunden (kein Support für den XIAO, da zu niedrig).
+- Kleiner flacher Schacht (Boden z=0,4mm) bei x≈49-62, y≈47-58, direkt vor dem USB-C-Durchbruch
+  im Gehäuse — nur die Buchse des XIAO reicht dort hinein, der Rest der Platine liegt auf A/B/D.
+
+Adapter-Konstruktion (`_engrave_names.py`-Stil, ad-hoc-Skript nicht im Repo committet):
+Robuster Ansatz statt einzelner Füße: ein Volumenblock über der gesamten Zielfläche von z=0,3 bis
+z=11,0 wird per `trimesh.boolean.difference` mit der vorhandenen Base verrechnet — das Ergebnis
+füllt automatisch genau die Lücke zum vorhandenen Terrain, unabhängig von dessen tatsächlicher
+Form (deutlich zuverlässiger als manuell platzierte Füße, die zweimal mit vorhandener Geometrie
+kollidierten, bis dieser Ansatz verwendet wurde). 4 kleine Klemmnasen (2,2×2,2mm, 1,6mm hoch)
+sitzen außerhalb der XIAO-Kontur (x=32-53, y=39-56,5) an deren 4 Ecken.
+
+**Wichtige Lektion aus zwei Bugs in v1:** (1) eine "Donut-Loch" in der Deckfläche entstand, weil
+der Fußabdruck unnötig um den Schraubdom herumgeführt wurde (der Dom ist mit 5,7mm weit niedriger
+als die Deckplatte bei 9,6-11mm, keine Kollisionsgefahr); (2) die 4 Klemmnasen waren zentriert auf
+den XIAO-Eckpunkten statt außerhalb davon platziert. Beide Fehler wurden per direkter
+Mesh-Kollisionsprüfung (`trimesh.boolean.intersection` mit der Base, Volumen muss ~0 sein) und
+Ray-Cast-Verifikation der Standfläche gefunden und behoben.
+
+Offen/nicht verifiziert: Nur 4 Eck-Klemmnasen statt (wie im offiziellen XIAO-Custom-Design, siehe
+README-Bild "XIAO will fit perfectly into the bottom part braces") vieler kleiner Noppen entlang
+beider Platinen-Längskanten. Sollte in Kombination mit der aufgeschraubten Deckplatte reichen,
+wurde aber nicht physisch getestet.
+
 ## Sonstiges
 
 - Kein Build-/Testsystem im Repo (reine YAML/STL/MD-Sammlung), daher keine CI-Befehle nötig.
