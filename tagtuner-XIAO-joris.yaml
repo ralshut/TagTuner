@@ -1,0 +1,19 @@
+# Joris' TagTuner - identical to tagtuner-XIAO-custom.yaml except that the
+# rotary encoder counts the other way round, so turning left/right maps to
+# volume up/down inverted compared to the other devices.
+#
+# Only pin_a/pin_b are swapped; ESPHome merges list entries from a package by
+# their `id`, so the rest of the `rotary` sensor (resolution, restore_mode and
+# both on_clockwise/on_anticlockwise handlers) is inherited unchanged.
+#
+# Flash this build to Joris' device only - the other TagTuners keep using
+# tagtuner-XIAO-custom.yaml.
+
+packages:
+  base: !include tagtuner-XIAO-custom.yaml
+
+sensor:
+  - platform: rotary_encoder
+    id: rotary
+    pin_a: 20 #D9  (was 19/D8)
+    pin_b: 19 #D8  (was 20/D9)
