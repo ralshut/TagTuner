@@ -103,6 +103,41 @@ README-Bild "XIAO will fit perfectly into the bottom part braces") vieler kleine
 beider Platinen-Längskanten. Sollte in Kombination mit der aufgeschraubten Deckplatte reichen,
 wurde aber nicht physisch getestet.
 
+## Deployment: Joris' TagTuner läuft live auf dem Homeserver
+
+Von den drei geplanten Einheiten (Levin, Joris, Tilian) ist aktuell nur **Joris'** TagTuner
+tatsächlich in Betrieb, per ESPHome an die Home-Assistant-Instanz auf dem Homeserver
+(`192.168.10.100`, siehe `C:\Software_Checkout\homeassistant\CLAUDE.md`) angebunden:
+
+- Device-Name intern `tagtuner_9fdef0` ("TagTuner-Joris"), Automation
+  `automation.tagtuner_music_player_for_nfc_tags_automation` (id `1785780841704`) nutzt das
+  Blueprint `blueprints/automation/luka6000/TagTuner4HAss.yaml` (im HA-Repo getrackt), Ziel
+  ist `media_player.sonos_amp` ("6) Joris").
+- Ein zweites Gerät `tagtuner_9f79bc` ("TagTuner-Xiao") existiert in HA, ist aber dauerhaft
+  `unavailable` — kommt nie online (WLAN/ESPHome-API-Verbindung scheitert). Vermutlich der
+  XIAO-ESP32-C6-Aufbau (siehe oben, "XIAO-auf-Atom-Echo-Adapter") für Levin oder Tilian, noch
+  nicht fertig in Betrieb genommen.
+
+### Bekanntes Problem: Gerät reagiert nicht mehr auf Tags, Lautstärke-Regler geht noch
+
+Tritt wiederkehrend auf (mind. zweimal beobachtet, Stand 2026-08-31): Ein aufgelegter NFC-Tag
+löst keine Wiedergabe aus, aber Drehen am Lautstärke-Encoder erzeugt weiterhin normale
+`volumeUp`/`volumeDown`-Events in HA (`event.tagtuner_9fdef0_action`). Befund aus der
+HA-Historie: Im betroffenen Zeitraum taucht **kein einziger Tag-Scan-Event** auf, nur
+Lautstärke-Events — das NFC-Lesen scheint auf Geräteebene gar nicht erst auszulösen, während
+der Encoder (vermutlich Interrupt-getrieben) weiterläuft. Deutet auf einen **Hänger in der
+NFC-Poll-Schleife der Firmware** hin, nicht auf ein WLAN-/API- oder HA-seitiges Problem
+(Sonos/Media-Player und die Automation selbst liefen unauffällig weiter).
+
+**Sofort-Fix:** Kein Ausstecken nötig — `button.tagtuner_9fdef0_restart` (ESPHome-Restart-Entity)
+aus der Ferne drücken bewirkt denselben Neustart wie Strom trennen.
+
+**Noch offen:** Root Cause in der Firmware nicht gefunden (kein passendes Issue im
+`luka6000/TagTuner`-Upstream-Repo gefunden, Stand 2026-08-31). Falls es wiederkehrt: prüfen, ob
+es sich mit bestimmten Tag-Typen/-Platzierungen korreliert, oder ein Watchdog-Reset in der
+ESPHome-YAML ergänzen, der bei Ausbleiben von NFC-Aktivität über einen längeren Zeitraum
+automatisch neu startet.
+
 ## Sonstiges
 
 - Kein Build-/Testsystem im Repo (reine YAML/STL/MD-Sammlung), daher keine CI-Befehle nötig.
