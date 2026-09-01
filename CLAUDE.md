@@ -113,10 +113,12 @@ tatsächlich in Betrieb, per ESPHome an die Home-Assistant-Instanz auf dem Homes
   `automation.tagtuner_music_player_for_nfc_tags_automation` (id `1785780841704`) nutzt das
   Blueprint `blueprints/automation/luka6000/TagTuner4HAss.yaml` (im HA-Repo getrackt), Ziel
   ist `media_player.sonos_amp` ("6) Joris").
-- Ein zweites Gerät `tagtuner_9f79bc` ("TagTuner-Xiao") existiert in HA, ist aber dauerhaft
-  `unavailable` — kommt nie online (WLAN/ESPHome-API-Verbindung scheitert). Vermutlich der
-  XIAO-ESP32-C6-Aufbau (siehe oben, "XIAO-auf-Atom-Echo-Adapter") für Levin oder Tilian, noch
-  nicht fertig in Betrieb genommen.
+- Ein zweites Gerät `tagtuner_9f79bc` ("TagTuner-Xiao") existierte in HA, war aber dauerhaft
+  `unavailable` (kam nie online) — vermutlich der XIAO-ESP32-C6-Aufbau (siehe oben,
+  "XIAO-auf-Atom-Echo-Adapter") für Levin oder Tilian, nie fertig in Betrieb genommen.
+  **Am 2026-09-01 komplett aus HA entfernt** (Config-Entry `01KYM1ZM8V7ZMDGZBY7WF151T5` +
+  Gerät + alle 13 Entitäten) — reine Karteileiche ohne Nutzen. Aktuell existiert in HA nur
+  noch Joris' Gerät.
 
 ### Bekanntes Problem: Gerät reagiert nicht mehr auf Tags, Lautstärke-Regler geht noch
 
@@ -160,6 +162,23 @@ auch ein per `mark_failed()` abgeschalteter PN532 — Leerlauf-Logs beweisen als
 Aussagekräftig ist nur ein **aufgelegter Tag** (dann `sensor.tagtuner_9fdef0_status` → `Tag <uid>`,
 `binary_sensor.tagtuner_9fdef0_tag` → `on`) oder ein serielles Log am USB-Port. Wer es endgültig
 remote klären will, muss `i2c: scan: true` in `tagtuner-XIAO-custom.yaml` setzen und neu flashen.
+
+**Von selbst wieder repariert, 2026-09-01, ~11:12 Uhr** — Befund stützt die Lose-Steckverbindung-These
+weiter: Nutzer hat nach eigener Aussage nochmal Strom gezogen/wieder angeschlossen, am Encoder
+rumgespielt und verschiedene Tags probiert; danach hat das Gerät wieder normal gelesen (HA-Logbook
+bestätigt ab 11:12:51 saubere `Tag <uid>` → `Tag removed`-Zyklen für mehrere unterschiedliche Tags
+hintereinander). **Wichtig:** Das Logbook zeigt für dieses Zeitfenster nur eine `unavailable`-Lücke
+von **0,19 Sekunden** (11:12:39,025 → 11:12:39,217) — ein echter Kaltstart braucht laut eigenem Test
+vom selben Tag ~13s bis die ESPHome-API wieder antwortet. Der behauptete Stromzieh-Zyklus hat sich in
+HA also gar nicht als vollständiger Neustart niedergeschlagen (evtl. zu kurz/nicht vollständig
+unterbrochen, oder er lag außerhalb des geloggten Fensters). Naheliegendste Erklärung bleibt daher:
+**das Anfassen/Bewegen des Geräts selbst** (Encoder drehen, Tags auflegen) hat einen wackligen
+Stecker/eine kalte Lötstelle wieder in Kontakt gebracht — kein Beweis, aber ein zweites Indiz für
+Hardware statt Firmware. Kein Log wurde während dieses Fensters mitgeschnitten (die Live-Log-Sitzung
+von 09:53 war zu dem Zeitpunkt bereits beendet), nur das HA-Logbook. **Noch nicht als erledigt
+betrachten** — ohne verifizierten Kaltstart mit definierter unterbrechungsfreier Dauer bleibt offen,
+ob der Fehler wiederkehrt. Bei erneutem Auftreten: gezielt Grove-Stecker/-Kabel nachdrücken, bevor
+zum Werkzeug (Kabeltausch) gegriffen wird.
 
 **Vorläufige Vorbeugung (HA-seitig, seit 2026-09-01):** Da kein Firmware-Fix vorliegt, läuft auf
 dem Homeserver eine tägliche 03:00-Uhr-Automation (`automation.tagtuner_joris_taeglicher_vorsorge_neustart`,
