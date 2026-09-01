@@ -136,7 +136,15 @@ aus der Ferne drücken bewirkt denselben Neustart wie Strom trennen.
 `luka6000/TagTuner`-Upstream-Repo gefunden, Stand 2026-08-31). Falls es wiederkehrt: prüfen, ob
 es sich mit bestimmten Tag-Typen/-Platzierungen korreliert, oder ein Watchdog-Reset in der
 ESPHome-YAML ergänzen, der bei Ausbleiben von NFC-Aktivität über einen längeren Zeitraum
-automatisch neu startet.
+automatisch neu startet. Grund, warum in `tagtuner-core-nfc.yaml` bislang kein Watchdog steckt:
+der `pn532_i2c`-Custom-Component (live von `github://luka6000/TagTuner@main` gezogen, 350ms-Polling)
+hat keine eingebaute Recovery-Logik — ein Fix müsste im Firmware-Fork selbst ansetzen.
+
+**Vorläufige Vorbeugung (HA-seitig, seit 2026-09-01):** Da kein Firmware-Fix vorliegt, läuft auf
+dem Homeserver eine tägliche 03:00-Uhr-Automation (`automation.tagtuner_joris_taeglicher_vorsorge_neustart`,
+siehe `C:\Software_Checkout\homeassistant\CLAUDE.md`), die `button.tagtuner_9fdef0_restart` drückt.
+Kuriert nur das Symptom (senkt die Chance, dass Joris tagsüber ein bereits hängendes Gerät vorfindet),
+behebt aber nicht die eigentliche Ursache in der Poll-Schleife.
 
 ## Sonstiges
 
