@@ -140,6 +140,27 @@ automatisch neu startet. Grund, warum in `tagtuner-core-nfc.yaml` bislang kein W
 der `pn532_i2c`-Custom-Component (live von `github://luka6000/TagTuner@main` gezogen, 350ms-Polling)
 hat keine eingebaute Recovery-Logik — ein Fix müsste im Firmware-Fork selbst ansetzen.
 
+**Wichtiger Gegenbefund (2026-09-01): der Fehler überlebt einen Kaltstart.** Nach Neustart *und*
+komplettem Strom-Ziehen werden weiterhin keine Tags erkannt, während Encoder, WLAN und ESPHome-API
+unauffällig laufen. Ein Hänger in der Poll-Schleife müsste durch einen Power-Cycle zwingend
+verschwinden — tut er nicht. Damit ist die Firmware-Hänger-These für diesen Fall **entkräftet**;
+wahrscheinlichste Ursache ist jetzt die Hardware: PN532-Modul defekt, Grove-Kabel/-Stecker lose oder
+gebrochen, oder eine kalte Lötstelle auf der I2C-Strecke (SDA=GPIO22/D4, SCL=GPIO23/D5, 100 kHz,
+`timeout: 13ms`). Nächste sinnvolle Schritte in dieser Reihenfolge: Grove-Kabel beidseitig neu
+stecken → Kabel tauschen → PN532-Modul tauschen (z.B. gegen das des nie in Betrieb genommenen
+zweiten Geräts `tagtuner_9f79bc`).
+
+**Diagnose-Grenzen, damit das nicht nochmal durchprobiert wird:** Gerätelogs lassen sich ohne
+ESPHome-Installation über den HA-Container abgreifen (`aioesphomeapi` ist dort vorhanden, die
+TagTuner-API ist unverschlüsselt, IP `192.168.10.157:6053`) — Details im HA-Repo-CLAUDE.md. Was das
+**nicht** leistet: Der Boot-Config-Dump mit der entscheidenden Zeile (`Found chip PN532 with firmware
+version …` bzw. `Error communicating with PN532`) läuft ~1 s nach dem Reset, die API ist erst nach
+~13 s wieder erreichbar. Und im Leerlauf schweigt bei `logger: level: DEBUG` sowohl ein gesunder als
+auch ein per `mark_failed()` abgeschalteter PN532 — Leerlauf-Logs beweisen also gar nichts.
+Aussagekräftig ist nur ein **aufgelegter Tag** (dann `sensor.tagtuner_9fdef0_status` → `Tag <uid>`,
+`binary_sensor.tagtuner_9fdef0_tag` → `on`) oder ein serielles Log am USB-Port. Wer es endgültig
+remote klären will, muss `i2c: scan: true` in `tagtuner-XIAO-custom.yaml` setzen und neu flashen.
+
 **Vorläufige Vorbeugung (HA-seitig, seit 2026-09-01):** Da kein Firmware-Fix vorliegt, läuft auf
 dem Homeserver eine tägliche 03:00-Uhr-Automation (`automation.tagtuner_joris_taeglicher_vorsorge_neustart`,
 siehe `C:\Software_Checkout\homeassistant\CLAUDE.md`), die `button.tagtuner_9fdef0_restart` drückt.
