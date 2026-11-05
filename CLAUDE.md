@@ -140,7 +140,13 @@ Es hängt also der **PN532-Chip selbst** und hält SCL fest.
    **jedem Software-Neustart** schlafen; gedacht für Akkugeräte mit Deep-Sleep, beim TagTuner nutzlos.
    Beim nächsten Boot muss er per I2C geweckt werden, ohne dass er je stromlos war. Der letzte
    funktionierende Scan vor dem Oktober-Ausfall war am Abend vor einem 03:00-Neustart.
-   Gegenindiz: Hänger gab es auch schon vor Einführung des 03:00-Neustarts (August).
+   Gegenindiz: Hänger gab es auch schon vor Einführung des 03:00-Neustarts (August). **Und
+   2026-11-05:** Gerät startete um 00:13 von selbst neu (kein Mensch, kein 03:00-Neustart mehr,
+   Server und alle anderen lokalen Geräte liefen durch; zeitgleich nur ein Internetausfall der
+   FRITZ!Box 00:14–00:29) → danach `bus_stuck`, vom Health-Check um 01:07 per ntfy gemeldet. Um
+   03:43 ein weiterer Selbst-Neustart. Bei einem Absturz-Neustart läuft `powerdown()` nicht. Also:
+   **Jeder Neustart des ESP ohne Stromlos-Werden des PN532 kann den Hänger auslösen**, egal wodurch.
+   Neustart-Grund unbekannt, weil die Firmware keinen `debug:`-Reset-Grund-Sensor hat.
 2. **5-V-Pegel auf I2C:** Laut README wird das Elechouse-PN532-Board (rot, V3) aus VBUS gespeist; sein
    Pegelwandler zieht SDA/SCL dann auf 5 V. Der ESP32-C6 ist laut Datenblatt nicht 5-V-tolerant
    (VIH max = VDD + 0,3 V). Abhilfe wäre: PN532-VCC auf 3V3 statt VBUS umlöten (laut Handbuch
@@ -152,7 +158,10 @@ Es hängt also der **PN532-Chip selbst** und hält SCL fest.
 - Stündlicher Health-Check auf dem Homeserver prüft den PN532 und schickt bei Ausfall ntfy
   (`homeassistant/docs/homeserver.md` → „Stündlicher Gesundheits-Check“, Skript
   `homeassistant/server/health-check/pn532_status.py`). Langzeit-Log: `/data/health-check/health-check.log`.
-- Kommt der Hänger trotz abgeschaltetem 03:00-Neustart wieder, ist Verdacht 1 entlastet → Umlöten auf 3V3.
+- Hänger kam trotz abgeschaltetem 03:00-Neustart wieder (2026-11-05). Da nur Strom-weg hilft, ist die
+  robuste Abhilfe eine **Strom-Unterbrechung des PN532**: per schaltbarer Steckdose vor dem Netzteil
+  (HA schaltet bei `bus_stuck` 30 s aus) oder per MOSFET/GPIO in der Firmware vor dem I2C-Setup.
+  Noch nicht entschieden. Umlöten auf 3V3 bleibt als Maßnahme gegen Verdacht 2.
 
 **Lessons learned zur Diagnose:**
 - **Zustand des PN532 remote lesbar, ohne Flashen und ohne Tag:** `aioesphomeapi` (im HA-Container
@@ -186,9 +195,11 @@ beschreibbar, z. B. Mifare Classic), ruft die Firmware `homeassistant.tag_scanne
 **Falle:** Trägt die Karte schon eine TagTuner-URI (Status `Tag <uid>`), hat diese Vorrang, der Name im
 Tag-Register wird ignoriert. Dann Karteninhalt mit `button.tagtuner_9fdef0_erase_tag` löschen.
 
-**Rückrichtung (TagTuner-Karten auf der Phoniebox):** nie umgesetzt. Phoniebox-Seite: Kartenliste,
-nach dem Neuaufbau 2026-11-01 fehlende Karten und Aufbau eines Karteneintrags in
-`C:\Software_Checkout\Phoniebox\docs\tagtuner-karten.md`.
+**Abgleich in beide Richtungen (seit 2026-11-04):** Das Werkzeug `C:\Software_Checkout\homeassistant\server\phoniebox-tagsync\`
+(Einzeiler: `C:\Software_Checkout\Phoniebox\tagsync.cmd status | sync | sync --apply`, Doku
+`homeassistant\docs\phoniebox-tagsync.md`) ersetzt den Handgriff vom 2026-08-22 und legt auch die Rückrichtung an
+(TagTuner-Tags mit Spotify-Namen werden Karten der Phoniebox). Phoniebox-Seite: Kartenliste, fehlende Karten und Aufbau
+eines Karteneintrags in `C:\Software_Checkout\Phoniebox\docs\tagtuner-karten.md`.
 
 ## Sonstiges
 
