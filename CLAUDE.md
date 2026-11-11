@@ -176,6 +176,23 @@ Es hängt also der **PN532-Chip selbst** und hält SCL fest.
   falscher IP gestartet.
 - HA-Verlauf reicht seit 2026-11-04 60 Tage zurück (vorher 10, deshalb war der Oktober-Auslöser weg).
 
+### Bekanntes Problem: liegende Karte startet Musik von selbst (2026-11-11, 03:57)
+
+**Befund (Logbuch + Automation-Trace verifiziert):** Kein Neustart des TagTuners. Die Karte
+`53-77-C5-F9-73-00-01` (Back in Black) lag seit ~2,75 Tagen auf dem Leser. Um 03:57:12 meldete die
+Firmware `tagRemoved` und 0,5 s später `tagScanned` derselben Karte, die Blueprint-Automation startete
+`play_media` + `volume_set 0.3` auf `media_player.sonos_amp`. Gestoppt wurde um 04:00 außerhalb von HA.
+
+**Ursache im Code:** `components/pn532/pn532.cpp`, `loop()`: Schon **ein** fehlgeschlagener oder leerer
+Poll (alle 350 ms) löst `on_tagremoved` aus und vergisst `current_uid_`; der nächste erfolgreiche Poll
+gilt als neues Auflegen. Keine Entprellung. In den Verlaufsdaten 13.10.–11.11. gab es 18 solche
+Aussetzer (< 1,5 s), aber nur dieser eine bei einer länger liegenden Karte.
+
+**Abhilfe: offen**, Optionen: Entprellung in der Firmware (z. B. erst nach mehreren Fehl-Polls
+`tagRemoved`, oder gleiche UID kurz nach dem Entfernen nicht als neu werten; Gerät zieht die
+Komponente bisher von `github://luka6000/TagTuner@main`, müsste auf den eigenen Fork zeigen), oder
+HA-seitig nachts die TagTuner-Automation abschalten, oder Karte nachts nicht liegen lassen.
+
 ## Verbindung zur Phoniebox (gleiche NFC-Tags)
 
 Die Phoniebox-Karten (Pi 3B, `phoniebox.local`) spielen auch am TagTuner. Karten-ID der Phoniebox = UID
