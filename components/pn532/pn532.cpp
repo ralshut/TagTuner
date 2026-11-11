@@ -146,30 +146,14 @@ void PN532::loop() {
 
   if (!success) {
     // Something failed
-#ifdef PN532_ON_TAG_REMOVED_TRIGGER_COUNT
-    if (!this->current_uid_.empty()) {
-      auto tag = make_unique<nfc::NfcTag>(this->current_uid_);
-      for (auto *trigger : this->triggers_ontagremoved_)
-        trigger->process(tag);
-    }
-#endif
-    this->current_uid_ = {};
-    this->turn_off_rf_();
+    this->handle_missed_read_();
     return;
   }
 
   uint8_t num_targets = read.empty() ? 0 : read[0];
   if (num_targets != 1) {
     // no tags found or too many
-#ifdef PN532_ON_TAG_REMOVED_TRIGGER_COUNT
-    if (!this->current_uid_.empty()) {
-      auto tag = make_unique<nfc::NfcTag>(this->current_uid_);
-      for (auto *trigger : this->triggers_ontagremoved_)
-        trigger->process(tag);
-    }
-#endif
-    this->current_uid_ = {};
-    this->turn_off_rf_();
+    this->handle_missed_read_();
     return;
   }
 
@@ -197,6 +181,7 @@ void PN532::loop() {
   }
 #endif
 
+  this->missed_reads_ = 0;
   if (nfcid.size() == this->current_uid_.size()) {
     bool same_uid = true;
     for (size_t i = 0; i < nfcid.size(); i++)
@@ -204,6 +189,10 @@ void PN532::loop() {
     if (same_uid)
       return;
   }
+
+  // A different tag replaced the previous one within the miss window: report the old one as removed first.
+  if (!this->current_uid_.empty())
+    this->report_tag_removed_();
 
   this->current_uid_ = nfcid;
 
@@ -259,6 +248,30 @@ void PN532::loop() {
   this->read_mode();
 
   this->turn_off_rf_();
+}
+
+void PN532::handle_missed_read_() {
+  if (!this->current_uid_.empty()) {
+    this->missed_reads_++;
+    if (this->missed_reads_ < TAG_REMOVED_AFTER_MISSES) {
+      ESP_LOGV(TAG, "Tag not seen (%u/%u), not reporting removal yet", this->missed_reads_,
+               TAG_REMOVED_AFTER_MISSES);
+      this->turn_off_rf_();
+      return;
+    }
+    this->report_tag_removed_();
+  }
+  this->missed_reads_ = 0;
+  this->current_uid_ = {};
+  this->turn_off_rf_();
+}
+
+void PN532::report_tag_removed_() {
+#ifdef PN532_ON_TAG_REMOVED_TRIGGER_COUNT
+  auto tag = make_unique<nfc::NfcTag>(this->current_uid_);
+  for (auto *trigger : this->triggers_ontagremoved_)
+    trigger->process(tag);
+#endif
 }
 
 bool PN532::write_command_(const std::span<const uint8_t> data) {

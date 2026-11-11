@@ -69,7 +69,8 @@ class PN532 : public PollingComponent {
   void update() override;
 
   void loop() override;
-  void on_powerdown() override { powerdown(); }
+  // TagTuner: no on_powerdown() -> powerdown(). It only suits battery devices using deep sleep; on a
+  // mains-powered TagTuner it put the PN532 to sleep on every reboot while it stayed powered.
 
 #ifdef PN532_BINARY_SENSOR_COUNT
   void register_tag(PN532BinarySensor *tag) { this->binary_sensors_.push_back(tag); }
@@ -168,6 +169,13 @@ class PN532 : public PollingComponent {
 #endif
   std::unique_ptr<nfc::NdefMessage> next_task_message_to_write_;
   nfc::NfcTagUid current_uid_;
+  // TagTuner: a single failed or empty poll used to report the tag as removed at once, so a tag lying
+  // on the reader was reported as newly scanned on the next poll. Removal is now reported only after
+  // this many consecutive misses (with the 350 ms update interval about one second).
+  static constexpr uint8_t TAG_REMOVED_AFTER_MISSES = 3;
+  uint8_t missed_reads_{0};
+  void handle_missed_read_();
+  void report_tag_removed_();
   uint32_t rd_start_time_{0};  // valid only while rd_started_ is set
   PN532ReadReady rd_ready_{WOULDBLOCK};
   NfcTask next_task_{READ};
