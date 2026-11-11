@@ -1,0 +1,56 @@
+# Joris' TagTuner (Seeed XIAO ESP32-C6, Geraet tagtuner-xiao-9fdef0).
+#
+# Entspricht tagtuner-XIAO-custom.factory.yaml (damit wurde das Geraet am 2026-09-20 ueber den
+# Web-Installer eingerichtet), mit drei Abweichungen:
+#   1. PN532-Treiber aus diesem Fork (components/pn532, Basis ESPHome 2026.10.2):
+#      - "Karte entfernt" erst nach 3 Fehl-Abfragen hintereinander (~1 s). Vorher reichte eine
+#        einzige, und eine liegende Karte startete beim naechsten Poll die Musik neu
+#        (2026-11-11 03:57).
+#      - kein powerdown() des PN532 bei jedem Neustart.
+#   2. Kein update:/http_request-OTA auf die Original-Firmware von luka6000: ein Klick auf
+#      "Aktualisieren" in HA wuerde diese Korrekturen sonst wieder ueberschreiben.
+#   3. Diagnose-Sensor "Reset reason" (warum ist das Geraet neu gestartet?).
+#
+# WLAN steht bewusst NICHT in dieser Datei: die beim Einrichten per Improv gespeicherten
+# Zugangsdaten liegen unter einem festen Schluessel und bleiben beim Aufspielen erhalten.
+#
+# Bauen/aufspielen (im Heimnetz, OTA ohne Passwort wie bisher):
+#   esphome run tagtuner-XIAO-joris.yaml --device 192.168.10.157
+
+substitutions:
+  name: "tagtuner-xiao"
+  friendly_name: "TagTuner"
+
+packages:
+  core: !include tagtuner-XIAO-custom.yaml
+
+esphome:
+  name: "${name}"
+  friendly_name: ${friendly_name}
+  name_add_mac_suffix: true
+  project:
+    name: LukaGra.TagTuner-XIAO
+    version: v260901-joris.1
+
+external_components:
+  - source:
+      type: local
+      path: components
+    components: [pn532]
+
+improv_serial:
+  next_url: https://luka6000.github.io/TagTuner/
+
+esp32_ble:
+  name: tagtuner
+esp32_improv:
+  authorizer: toggle
+
+debug:
+  update_interval: 5min
+
+text_sensor:
+  - platform: debug
+    reset_reason:
+      name: "Reset reason"
+      entity_category: diagnostic

@@ -188,10 +188,36 @@ Poll (alle 350 ms) löst `on_tagremoved` aus und vergisst `current_uid_`; der n�
 gilt als neues Auflegen. Keine Entprellung. In den Verlaufsdaten 13.10.–11.11. gab es 18 solche
 Aussetzer (< 1,5 s), aber nur dieser eine bei einer länger liegenden Karte.
 
-**Abhilfe: offen**, Optionen: Entprellung in der Firmware (z. B. erst nach mehreren Fehl-Polls
-`tagRemoved`, oder gleiche UID kurz nach dem Entfernen nicht als neu werten; Gerät zieht die
-Komponente bisher von `github://luka6000/TagTuner@main`, müsste auf den eigenen Fork zeigen), oder
-HA-seitig nachts die TagTuner-Automation abschalten, oder Karte nachts nicht liegen lassen.
+**Abhilfe:**
+- Seit 2026-11-11 HA-Automation „TagTuner-Joris Nachtruhe“ (20:00–06:30 TagTuner-Automation aus,
+  `homeassistant/docs/tagtuner.md`), als Übergang.
+- **Firmware-Korrektur gebaut, noch NICHT aufgespielt** (Stand 2026-11-11): siehe „Eigene Firmware für Joris“.
+
+## Eigene Firmware für Joris (`tagtuner-XIAO-joris.yaml`)
+
+- Upstream (luka6000) baut seit 2026-09-20 mit dem **eingebauten** PN532-Treiber von ESPHome; der
+  alte eigene Treiber im Repo war logisch identisch (nur ältere C++-Form). Beide entprellen nicht
+  und legen den PN532 bei jedem Neustart per `powerdown()` schlafen.
+- `components/pn532/`: Kopie aus **ESPHome 2026.10.2** (Commit „unveränderte Kopie“), darauf zwei
+  Änderungen (nächster Commit): `tagRemoved` erst nach 3 Fehl-Polls hintereinander (~1 s;
+  gleiche Karte wiedergefunden → keine neue Meldung; Kartenwechsel im Fenster → alte Karte wird
+  zuerst als entfernt gemeldet), kein `on_powerdown()`.
+- `tagtuner-XIAO-joris.yaml` = Factory-Konfiguration + dieser Treiber + Sensor „Reset reason“,
+  **ohne** `update:`/`http_request`-OTA auf die Original-Firmware (würde die Korrektur überschreiben).
+  Gleicher Gerätename (`tagtuner-xiao` + MAC) → HA behält Gerät und Entitäten.
+- WLAN steht nicht in der YAML: Per Improv gespeicherte Zugangsdaten liegen bei Konfigurationen ohne
+  `wifi: networks` unter dem festen Preference-Schlüssel `88491487` und überleben das Aufspielen
+  (im ESPHome-Quelltext `wifi_component.cpp` geprüft).
+- **Bauen:** ESPHome 2026.10.2 in einem venv, **aus PowerShell** (Git-Bash/MSYS bricht die
+  ESP-IDF-Installation ab: „MSys/Mingw is not supported“). Build am 2026-11-11 erfolgreich,
+  Flash 86 %, RAM 42 %. Warnungen nur zu `CONFIG_PM_*: 'Y'` aus der Upstream-YAML (ungültiger Wert,
+  wird ignoriert, im Original genauso).
+- **Aufspielen** nur im Heimnetz (OTA, ohne Passwort): `esphome upload tagtuner-XIAO-joris.yaml
+  --device 192.168.10.157`, oder per USB-C am PC. **Rückweg:** Original-Firmware über den
+  Web-Installer von luka6000 (`https://luka6000.github.io/TagTuner/`).
+- Beobachtung beim Prüfen: `api: reboot_timeout: 15min` (ESPHome-Standard) startet das Gerät neu,
+  wenn 15 min keine HA-Verbindung besteht. Mögliche Erklärung der nächtlichen Selbst-Neustarts,
+  **nicht belegt**; der neue Sensor „Reset reason“ soll das klären.
 
 ## Verbindung zur Phoniebox (gleiche NFC-Tags)
 
