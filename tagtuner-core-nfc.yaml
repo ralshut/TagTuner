@@ -1,10 +1,3 @@
-# this is a modified PN532 to make it work with 888byte tags
-external_components:
-  # - source: ./components
-  - source: github://luka6000/TagTuner@main
-    components: [ pn532 ]
-    refresh: 1min
-
 binary_sensor:
   - platform: template
     name: "=Tag="
@@ -283,6 +276,14 @@ pn532_i2c:
           - homeassistant.tag_scanned: !lambda |-
               ESP_LOGD("tagtuner", "No TagTuner NDEF, using UID");
               return x;
+    - if:
+        condition:
+          lambda: 'return id(uri).find("https://www.home-assistant.io/tag/") != std::string::npos ;'
+        then:
+          - homeassistant.tag_scanned: !lambda |-
+              ESP_LOGD("tagtuner", "HA NDEF found");
+              size_t pos = id(uri).find("https://www.home-assistant.io/tag/");
+              return id(uri).substr(pos + 34);
         else:
           - script.execute:
               id: tagtuner_event
